@@ -2,10 +2,6 @@
 -- small changes to allow algorithms to be tested without the need of creating valid Piet images.
 -- Original Piet information can be found at http://www.dangermouse.net/esoteric/piet.html
 
--- Just as in Piet, this language spec assumes a single "infinite" stack and a linear command execution order.
--- Blank lines should be ignored.
--- An implicit "end" command is present at the bottom of the document.
-
 module Language.QuickPiet.StackOperations 
     (Command(..)
     ,Stack
