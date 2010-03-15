@@ -69,7 +69,7 @@ duplicate (x:stack) = x:x:stack
 -- And bringing all values above it up by 1 place ...
 -- A negative number of rolls rolls in the opposite direction
 roll :: Stack -> Stack
-roll (x:y:stack) = (roll' x top) ++ bot
+roll (x:y:stack) = roll' x top ++ bot
     where (top, bot) = splitAt y stack
           roll' 0 lst = lst
           roll' n (elt:lst) = roll' (n - 1) (lst ++ [elt])

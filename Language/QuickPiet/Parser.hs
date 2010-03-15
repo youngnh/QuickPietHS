@@ -105,5 +105,5 @@ goto = do string "goto"
           return (Goto label other)
 
 parseScript :: String -> Either ParseError [Command]
-parseScript input = parse script "(unknown)" input
+parseScript = parse script "(unknown)"
 
