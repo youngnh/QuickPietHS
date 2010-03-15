@@ -1,15 +1,15 @@
 module Language.QuickPiet.Parser 
-    (parseQP
+    (parseScript
     ) where
 
-import Language.QuickPiet.StackOperations
-import Text.ParserCombinators.Parsec
+import Language.QuickPiet.StackOperations (Command(..))
+import Text.ParserCombinators.Parsec hiding (label)
 
 -- a script is a bunch of lines terminated by an EOF
-qpScript :: GenParser Char st [Command]
-qpScript = do result <- many line
-              eof
-              return result
+script :: GenParser Char st [Command]
+script = do result <- many line
+            eof
+            return result
 
 -- a line contains a single command terminated by a eol (newline)
 line :: GenParser Char st Command
@@ -23,7 +23,7 @@ eol = char '\n'
 
 -- a command is a comment a label or an action
 command :: GenParser Char st Command
-command = comment <|> qpLabel <|> action
+command = comment <|> label <|> action
 
 -- a comment is a # followed by zero or more chars
 comment :: GenParser Char st Command
@@ -32,78 +32,78 @@ comment = do char '#'
              return Comment
 
 -- a label is a : followed by zero or more alpha-numeric chars
-qpLabel :: GenParser Char st Command
-qpLabel = do char ':'
-             name <- many alphaNum
-             return (Label name)
+label :: GenParser Char st Command
+label = do char ':'
+           name <- many alphaNum
+           return (Label name)
 
 action :: GenParser Char st Command
-action = qpPush 
-         <|> qpPop 
-         <|> qpDuplicate 
-         <|> qpRoll 
-         <|> qpIn 
-         <|> qpOut 
-         <|> qpAdd 
-         <|> qpSubtract 
-         <|> qpMultiply 
-         <|> qpDivide 
-         <|> qpMod
-         <|> qpNot
-         <|> qpGreater
-         <|> qpEnd
-         <|> qpGoto
+action = push 
+         <|> pop 
+         <|> duplicate 
+         <|> roll 
+         <|> inop 
+         <|> outop
+         <|> add
+         <|> subtractop 
+         <|> multiply 
+         <|> divide 
+         <|> modop
+         <|> notop
+         <|> greater
+         <|> end
+         <|> goto
 
-qpPush :: GenParser Char st Command
-qpPush = do string "push"
-            x <- many digit
-            return (Push (read x))
+push :: GenParser Char st Command
+push = do string "push"
+          x <- many digit
+          return (Push (read x))
 
-qpPop = do string "pop"
-           return Pop
+pop = do string "pop"
+         return Pop
 
-qpDuplicate = do string "duplicate"
-                 return Duplicate
+duplicate = do string "duplicate"
+               return Duplicate
 
-qpRoll = do string "roll"
-            return Roll
+roll = do string "roll"
+          return Roll
 
-qpIn = do string "in"
+inop = do string "in"
           return In
 
-qpOut = do string "out"
+outop = do string "out"
            return Out
 
-qpAdd = do string "add"
-           return Add
+add = do string "add"
+         return Add
 
-qpSubtract = do string "subtract"
+subtractop = do string "subtract"
                 return Subtract
 
-qpMultiply = do string "multiply"
-                return Multiply
+multiply = do string "multiply"
+              return Multiply
 
-qpDivide = do string "divide"
-              return Divide
+divide = do string "divide"
+            return Divide
 
-qpMod = do string "mod"
+modop = do string "mod"
            return Mod
 
-qpNot = do string "not"
+notop = do string "not"
            return Not
 
-qpGreater = do string "greater"
-               return Greater
+greater = do string "greater"
+             return Greater
 
-qpEnd = do string "end"
-           return End
+end = do string "end"
+         return End
 
-qpGoto = do string "goto"
-            label <- many alphaNum
-            char ' '
-            other <- many alphaNum
-            return (Goto label other)
+goto = do string "goto"
+          label <- many alphaNum
+          char ' '
+          other <- many alphaNum
+          return (Goto label other)
 
-parseQP :: String -> Either ParseError [Command]
-parseQP input = parse qpScript "(unknown)" input
+parseScript :: String -> Either ParseError [Command]
+parseScript input = parse script "(unknown)" input
 

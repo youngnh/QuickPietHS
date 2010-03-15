@@ -14,7 +14,7 @@ import System.IO
 main = do (path:args) <- getArgs
           contents <- readFile path
           instr <- getContents
-          case parseQP contents of
+          case parseScript contents of
             Left err -> putStrLn $ "uh oh, error: " ++ (show err)
             Right script -> let outstr = runToCompletion script instr in
                             putStr outstr
