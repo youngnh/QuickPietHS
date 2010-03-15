@@ -1,0 +1,10 @@
+I haven't tested this code, but if you'd like to, then the following will get you on your way:
+$ ghc --make Main.hs -o qp
+
+which will then allow you to interpret QuickPiet scripts:
+$ ./qp filename.qp
+
+where filename.qp is some script file you want to run
+
+Good Luck!
+
