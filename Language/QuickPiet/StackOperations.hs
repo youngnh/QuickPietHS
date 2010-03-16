@@ -42,7 +42,7 @@ data Command = Push Int
              | Not
              | Greater
              | End
-             | Comment
+             | Comment String
              | Label String
              | Goto String String
                deriving (Eq)
@@ -62,6 +62,7 @@ instance Show Command where
     show Not = "not"
     show Greater = "greater"
     show End = "end"
+    show (Comment s) = "#" ++ s
     show (Label s) = ":" ++ s
     show (Goto label other) = "goto " ++ label ++ " " ++ other
 

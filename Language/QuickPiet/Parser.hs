@@ -28,8 +28,8 @@ command = comment <|> label <|> action
 -- a comment is a # followed by zero or more chars
 comment :: GenParser Char st Command
 comment = do char '#'
-             many (noneOf "\n")
-             return Comment
+             text <- many (noneOf "\n")
+             return (Comment text)
 
 -- a label is a : followed by zero or more alpha-numeric chars
 label :: GenParser Char st Command
