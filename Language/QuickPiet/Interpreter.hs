@@ -44,7 +44,7 @@ execute (Interpreter done (p@Greater:rest)            instr outstr stack)     = 
 execute (Interpreter done (p@End:rest)                instr outstr stack)     = Finished    (done ++ [p]) rest  instr  outstr  stack
 execute (Interpreter done (p@(Label _):rest)          instr outstr stack)     = Interpreter (done ++ [p]) rest  instr  outstr  stack
 execute (Interpreter done (p@Comment:rest)            instr outstr stack)     = Interpreter (done ++ [p]) rest  instr  outstr  stack
-execute (Interpreter done (p@(Goto label other):rest) instr outstr (x:stack)) = Interpreter done'         rest' instr  outstr  stack
+execute (Interpreter done (p@(Goto label other):rest) instr outstr (Stack (x:stack))) = Interpreter done'         rest' instr  outstr  (Stack stack)
     where (done', rest') = goto x (done ++ [p] ++ rest)
           goto 1 prog = break (== (Label label)) prog
           goto 3 prog = break (== (Label other)) prog
@@ -54,7 +54,7 @@ nstep 0 interpreter = interpreter
 nstep n interpreter = nstep (n - 1) (execute interpreter)
 
 initialize :: [Command] -> String -> Interpreter
-initialize script instr = Interpreter script [] instr "" []
+initialize script instr = Interpreter script [] instr "" (Stack [])
 
 -- takes the list of commands to execute and stdin, returns stdout
 complete :: Interpreter -> Interpreter
