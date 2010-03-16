@@ -54,7 +54,7 @@ nstep 0 interpreter = interpreter
 nstep n interpreter = nstep (n - 1) (execute interpreter)
 
 initialize :: [Command] -> String -> Interpreter
-initialize script instr = Interpreter script [] instr "" (Stack [])
+initialize script instr = Interpreter [] script instr "" (Stack [])
 
 -- takes the list of commands to execute and stdin, returns stdout
 complete :: Interpreter -> Interpreter

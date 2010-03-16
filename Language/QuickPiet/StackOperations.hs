@@ -101,9 +101,9 @@ inop bs (Stack stack) = (cs, (Stack (c:stack)))
           cs = tail bs
 
 -- out
--- Pop the top value from the stack and output it to STDOUT in it's ASCII character value
+-- Pop the top value from the stack and append it's ASCII character value to STDOUT
 outop :: String -> Stack -> (String, Stack)
-outop bs (Stack (x:stack)) = ((b:bs), (Stack stack))
+outop bs (Stack (x:stack)) = ((bs ++ [b]), (Stack stack))
     where b = chr x
 
 -- add

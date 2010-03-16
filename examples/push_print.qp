@@ -1,4 +1,5 @@
-# push "Hello, World!" onto the stack backwards
+# push "Hello, World!\n" onto the stack
+push 10
 push 33
 push 100
 push 108
@@ -13,6 +14,8 @@ push 108
 push 101
 push 72
 # spit each character back out
+out
+out
 out
 out
 out
