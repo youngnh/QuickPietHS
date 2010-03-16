@@ -1,0 +1,27 @@
+# push "Hello, World!" onto the stack backwards
+push 33
+push 100
+push 108
+push 114
+push 111
+push 87
+push 32
+push 44
+push 111
+push 108
+push 108
+push 101
+push 72
+# spit each character back out
+out
+out
+out
+out
+out
+out
+out
+out
+out
+out
+out
+out
