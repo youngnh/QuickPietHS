@@ -6,10 +6,22 @@ module Language.QuickPiet.Interpreter
     ,complete
     )where
 
+import Data.List
 import Language.QuickPiet.StackOperations
 
 data Interpreter = Interpreter [Command] [Command] String String Stack
                  | Finished [Command] [Command] String String Stack
+
+instance Show Interpreter where
+    show interpreter = intercalate "\n" [(status interpreter), (lineinfo interpreter), (stackstatus interpreter)]
+        where status (Interpreter _ _ _ _ _) = "Executing..."
+              status (Finished    _ _ _ _ _) = "Finished..."
+              lineinfo (Interpreter done rest _ _ _) = lineinfo' done rest
+              lineinfo (Finished done rest _ _ _) = lineinfo' done rest
+              lineinfo' ds [] = "<end of script>"
+              lineinfo' ds (c:_) = (show (length ds)) ++ ": " ++ (show c)
+              stackstatus (Interpreter _ _ _ _ stack) = show stack
+              stackstatus (Finished    _ _ _ _ stack) = show stack
 
 execute :: Interpreter -> Interpreter
 execute finished@(Finished _ _ _ _ _) = finished
