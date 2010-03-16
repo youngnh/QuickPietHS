@@ -16,5 +16,5 @@ main = do (path:args) <- getArgs
           instr <- getContents
           case parseScript contents of
             Left err -> putStrLn $ "uh oh, error: " ++ show err
-            Right script -> let outstr = runToCompletion script instr in
+            Right script -> let (Finished _ _ _ outstr _) = complete (initialize script instr) in
                             putStr outstr

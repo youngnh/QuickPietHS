@@ -1,6 +1,10 @@
 module Language.QuickPiet.Interpreter 
-    (runToCompletion
-    ) where
+    (Interpreter(..)
+    ,execute
+    ,nstep
+    ,initialize
+    ,complete
+    )where
 
 import Language.QuickPiet.StackOperations
 
@@ -9,6 +13,7 @@ data Interpreter = Interpreter [Command] [Command] String String Stack
 
 execute :: Interpreter -> Interpreter
 execute finished@(Finished _ _ _ _ _) = finished
+execute (Interpreter done []                          instr outstr stack)     = Finished done [] instr outstr stack
 execute (Interpreter done (p@(Push x):rest)           instr outstr stack)     = Interpreter (done ++ [p]) rest  instr  outstr  (push x stack)
 execute (Interpreter done (p@Pop:rest)                instr outstr stack)     = Interpreter (done ++ [p]) rest  instr  outstr  (pop stack)
 execute (Interpreter done (p@Duplicate:rest)          instr outstr stack)     = Interpreter (done ++ [p]) rest  instr  outstr  (duplicate stack)
@@ -32,8 +37,14 @@ execute (Interpreter done (p@(Goto label other):rest) instr outstr (x:stack)) = 
           goto 1 prog = break (== (Label label)) prog
           goto 3 prog = break (== (Label other)) prog
 
+nstep :: Int -> Interpreter -> Interpreter
+nstep 0 interpreter = interpreter
+nstep n interpreter = nstep (n - 1) (execute interpreter)
+
+initialize :: [Command] -> String -> Interpreter
+initialize script instr = Interpreter script [] instr "" []
+
 -- takes the list of commands to execute and stdin, returns stdout
-runToCompletion :: [Command] -> String -> String
-runToCompletion script instr = run (Interpreter script [] instr "" [])
-    where run (Finished _ _ _ outstr _) = outstr
-          run interpreter = run (execute interpreter)
+complete :: Interpreter -> Interpreter
+complete finished@(Finished _ _ _ _ _) = finished
+complete interpreter = complete (execute interpreter)
