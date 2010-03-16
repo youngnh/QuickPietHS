@@ -37,19 +37,19 @@ label = do char ':'
 
 action :: GenParser Char st Command
 action = push 
-         <|> pop 
-         <|> duplicate 
-         <|> roll 
-         <|> inop 
-         <|> outop
-         <|> add
-         <|> subtractop 
-         <|> multiply 
-         <|> divide 
-         <|> modop
-         <|> notop
-         <|> greater
-         <|> end
+         <|> instruction "pop" Pop
+         <|> instruction "duplicate" Duplicate
+         <|> instruction "roll" Roll
+         <|> instruction "in" In
+         <|> instruction "out" Out
+         <|> instruction "add" Add
+         <|> instruction "subtract" Subtract
+         <|> instruction "multiply" Multiply
+         <|> instruction "divide" Divide
+         <|> instruction "mod" Mod
+         <|> instruction "not" Not
+         <|> instruction "greater" Greater
+         <|> instruction "end" End
          <|> goto
 
 push :: GenParser Char st Command
@@ -58,44 +58,9 @@ push = do string "push"
           x <- many digit
           return (Push (read x))
 
-pop = do string "pop"
-         return Pop
-
-duplicate = do string "duplicate"
-               return Duplicate
-
-roll = do string "roll"
-          return Roll
-
-inop = do string "in"
-          return In
-
-outop = do string "out"
-           return Out
-
-add = do string "add"
-         return Add
-
-subtractop = do string "subtract"
-                return Subtract
-
-multiply = do string "multiply"
-              return Multiply
-
-divide = do string "divide"
-            return Divide
-
-modop = do string "mod"
-           return Mod
-
-notop = do string "not"
-           return Not
-
-greater = do string "greater"
-             return Greater
-
-end = do string "end"
-         return End
+instruction :: String -> Command -> GenParser Char st Command
+instruction s c = do string s
+                     return c
 
 goto = do string "goto"
           label <- many alphaNum
