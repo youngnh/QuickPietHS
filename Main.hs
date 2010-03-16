@@ -14,7 +14,7 @@ import System.IO
 main = do (path:args) <- getArgs
           contents <- readFile path
           instr <- getContents
-          case parseScript contents of
-            Left err -> putStrLn $ "uh oh, error: " ++ show err
+          case parseScript path contents of
+            Left err -> putStrLn $ "Error in " ++ show err
             Right script -> let (Finished _ _ _ outstr _) = complete (initialize script instr) in
                             putStr outstr

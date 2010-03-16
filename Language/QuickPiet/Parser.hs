@@ -68,6 +68,6 @@ goto = do string "goto"
           other <- many alphaNum
           return (Goto label other)
 
-parseScript :: String -> Either ParseError [Command]
-parseScript = parse script "(unknown)"
+parseScript :: SourceName -> String -> Either ParseError [Command]
+parseScript = parse script
 
