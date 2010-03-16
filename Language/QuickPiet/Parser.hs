@@ -7,15 +7,9 @@ import Text.ParserCombinators.Parsec hiding (label)
 
 -- a script is a bunch of lines terminated by an EOF
 script :: GenParser Char st [Command]
-script = do result <- many line
+script = do result <- sepEndBy command eol
             eof
             return result
-
--- a line contains a single command terminated by a eol (newline)
-line :: GenParser Char st Command
-line = do result <- command
-          eol
-          return result
 
 -- a eol is a single \n char
 eol :: GenParser Char st Char
