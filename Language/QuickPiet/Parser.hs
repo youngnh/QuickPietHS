@@ -17,7 +17,11 @@ eol = char '\n'
 
 -- a command is a comment a label or an action
 command :: GenParser Char st Command
-command = comment <|> label <|> action
+command = comment <|> label <|> action <|> blank
+
+-- a blank line is all whitespace
+blank = do many (oneOf " \t")
+           return Blank
 
 -- a comment is a # followed by zero or more chars
 comment :: GenParser Char st Command

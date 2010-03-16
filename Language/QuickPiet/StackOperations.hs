@@ -43,6 +43,7 @@ data Command = Push Int
              | Greater
              | End
              | Comment String
+             | Blank
              | Label String
              | Goto String String
                deriving (Eq)

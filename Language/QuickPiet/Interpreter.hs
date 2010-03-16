@@ -43,7 +43,8 @@ execute (Interpreter done (p@Not:rest)                instr outstr stack)     = 
 execute (Interpreter done (p@Greater:rest)            instr outstr stack)     = Interpreter (done ++ [p]) rest  instr  outstr  (greater stack)
 execute (Interpreter done (p@End:rest)                instr outstr stack)     = Finished    (done ++ [p]) rest  instr  outstr  stack
 execute (Interpreter done (p@(Label _):rest)          instr outstr stack)     = Interpreter (done ++ [p]) rest  instr  outstr  stack
-execute (Interpreter done (p@(Comment _):rest)            instr outstr stack)     = Interpreter (done ++ [p]) rest  instr  outstr  stack
+execute (Interpreter done (p@(Comment _):rest)        instr outstr stack)     = Interpreter (done ++ [p]) rest  instr  outstr  stack
+execute (Interpreter done (p@Blank:rest)              instr outstr stack)     = execute (Interpreter (done ++ [p]) rest instr outstr stack)
 execute (Interpreter done (p@(Goto label other):rest) instr outstr (Stack (x:stack))) = Interpreter done'         rest' instr  outstr  (Stack stack)
     where (done', rest') = goto x (done ++ [p] ++ rest)
           goto 1 prog = break (== (Label label)) prog
