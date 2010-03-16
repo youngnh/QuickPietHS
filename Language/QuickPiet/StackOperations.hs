@@ -41,7 +41,25 @@ data Command = Push Int
              | Comment
              | Label String
              | Goto String String
-               deriving (Eq, Show)
+               deriving (Eq)
+
+instance Show Command where
+    show (Push x) = "push " ++ (show x)
+    show Pop = "pop"
+    show Duplicate = "duplicate"
+    show Roll = "roll"
+    show In = "in"
+    show Out = "out"
+    show Add = "add"
+    show Subtract = "subtract"
+    show Multiply = "multiply"
+    show Divide = "divide"
+    show Mod = "mod"
+    show Not = "not"
+    show Greater = "greater"
+    show End = "end"
+    show (Label s) = ":" ++ s
+    show (Goto label other) = "goto " ++ label ++ " " ++ other
 
 -- push X
 -- Pushes the value of X onto the stack.  X should be a positive integer
