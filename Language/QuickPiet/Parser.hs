@@ -32,7 +32,7 @@ comment = do char '#'
 -- a label is a : followed by zero or more alpha-numeric chars
 label :: GenParser Char st Command
 label = do char ':'
-           name <- many alphaNum
+           name <- many1 alphaNum
            return (Label name)
 
 action :: GenParser Char st Command
