@@ -56,6 +56,7 @@ action = push
 
 push :: GenParser Char st Command
 push = do string "push"
+          char ' '
           x <- many digit
           return (Push (read x))
 
