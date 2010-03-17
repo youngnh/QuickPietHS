@@ -65,18 +65,18 @@ action = push
          <|> goto
 
 push :: GenParser Char st Command
-push = do symbol "push"
-          x <- natural
-          return (Push (fromIntegral x))
+push = try $ do symbol "push"
+                x <- natural
+                return (Push (fromIntegral x))
 
 instruction :: String -> Command -> GenParser Char st Command
-instruction s c = do symbol s
-                     return c
+instruction s c = try $ do symbol s
+                           return c
 
-goto = do symbol "goto"
-          label <- identifier
-          other <- identifier
-          return (Goto label other)
+goto = try $ do symbol "goto"
+                label <- identifier
+                other <- identifier
+                return (Goto label other)
 
 parseScript :: SourceName -> String -> Either ParseError [Command]
 parseScript = parse script
