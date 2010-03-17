@@ -4,10 +4,32 @@ module Language.QuickPiet.Parser
 
 import Language.QuickPiet.StackOperations (Command(..))
 import Text.ParserCombinators.Parsec hiding (label)
+import qualified Text.ParserCombinators.Parsec.Token as T
+
+quickPietDef = T.LanguageDef {
+                 T.commentStart = ""
+               , T.commentEnd = ""
+               , T.commentLine = "#"
+               , T.nestedComments = False
+               , T.identStart = alphaNum
+               , T.identLetter = alphaNum
+               , T.opStart = pzero
+               , T.opLetter = anyChar
+               , T.reservedNames = []
+               , T.reservedOpNames = []
+               , T.caseSensitive = True
+               }
+
+lexer = T.makeTokenParser quickPietDef
+whiteSpace = T.whiteSpace lexer
+identifier = T.identifier lexer
+symbol = T.symbol lexer
+natural = T.natural lexer
 
 -- a script is a bunch of lines terminated by an EOF
 script :: GenParser Char st [Command]
-script = do result <- sepEndBy command eol
+script = do whiteSpace
+            result <- many command
             eof
             return result
 
@@ -17,22 +39,12 @@ eol = char '\n'
 
 -- a command is a comment a label or an action
 command :: GenParser Char st Command
-command = comment <|> label <|> action <|> blank
+command = label <|> action
 
--- a blank line is all whitespace
-blank = do many (oneOf " \t")
-           return Blank
-
--- a comment is a # followed by zero or more chars
-comment :: GenParser Char st Command
-comment = do char '#'
-             text <- many (noneOf "\n")
-             return (Comment text)
-
--- a label is a : followed by zero or more alpha-numeric chars
+-- a label is a : followed by an identifier
 label :: GenParser Char st Command
 label = do char ':'
-           name <- many1 alphaNum
+           name <- identifier
            return (Label name)
 
 action :: GenParser Char st Command
@@ -53,19 +65,17 @@ action = push
          <|> goto
 
 push :: GenParser Char st Command
-push = do string "push"
-          char ' '
-          x <- many digit
-          return (Push (read x))
+push = do symbol "push"
+          x <- natural
+          return (Push (fromIntegral x))
 
 instruction :: String -> Command -> GenParser Char st Command
-instruction s c = do string s
+instruction s c = do symbol s
                      return c
 
-goto = do string "goto"
-          label <- many alphaNum
-          char ' '
-          other <- many alphaNum
+goto = do symbol "goto"
+          label <- identifier
+          other <- identifier
           return (Goto label other)
 
 parseScript :: SourceName -> String -> Either ParseError [Command]
