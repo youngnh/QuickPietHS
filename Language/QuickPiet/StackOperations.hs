@@ -1,7 +1,7 @@
 -- These are the stack operations which follow the actions available with the Piet programming languages with some 
 -- small changes to allow algorithms to be tested without the need of creating valid Piet images.
 -- Original Piet information can be found at http://www.dangermouse.net/esoteric/piet.html
-
+{-# LANGUAGE DeriveDataTypeable #-}
 module Language.QuickPiet.StackOperations 
     (Command(..)
     ,Stack(..)
@@ -20,9 +20,18 @@ module Language.QuickPiet.StackOperations
     ,greater
     )where
 
+import Control.Exception
 import Data.Char
+import Data.Typeable
 
 newtype Stack = Stack [Int]
+
+data StackException = StackException String
+                      deriving (Typeable)
+
+instance Exception StackException
+instance Show StackException where
+    show (StackException s) = s
 
 instance Show Stack where
     show (Stack []) = "$"
@@ -106,6 +115,7 @@ inop bs (Stack stack) = (cs, (Stack (c:stack)))
 outop :: String -> Stack -> (String, Stack)
 outop bs (Stack (x:stack)) = ((bs ++ [b]), (Stack stack))
     where b = chr x
+outop _ (Stack []) = throw (StackException "Cannot pop to output from an empty stack")
 
 -- add
 -- Pops the top two values, adds them, and pushes the result
