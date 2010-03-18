@@ -122,3 +122,8 @@ label s = return s
 goto :: Int -> State ([Command a], [Command a]) ()
 goto x = do (a, b) <- get
             put $ splitAt x (a ++ b)
+
+next :: State([Command a], [Command a]) (Command a)
+next = do (a, (b:rest)) <- get
+          put (a ++ [b], rest)
+          return b
