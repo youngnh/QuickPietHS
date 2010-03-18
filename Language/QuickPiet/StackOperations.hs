@@ -114,6 +114,7 @@ inop inH stack = do c <- hGetChar inH
 -- Pop the top value from the stack and append it's ASCII character value to STDOUT
 outop :: Handle -> Stack -> IO Stack
 outop outH (c:stack) = do hPutChar outH (chr c)
+                          hFlush outH
                           return stack
 outop _ [] = throw (StackException "Cannot pop to output from an empty stack")
 
