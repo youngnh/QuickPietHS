@@ -44,6 +44,7 @@ execute (Interpreter done (p@(Goto label other):rest) inH outH (x:stack)) = retu
     where (done', rest') = goto x (done ++ [p] ++ rest)
           goto 1 prog = break (== (Label label)) prog
           goto 3 prog = break (== (Label other)) prog
+          goto _ prog = (done ++ [p], rest)
 
 initialize :: [Command] -> Handle -> Handle -> Interpreter
 initialize script inH outH = Interpreter [] script inH outH []
