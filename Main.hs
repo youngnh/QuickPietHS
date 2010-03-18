@@ -13,8 +13,7 @@ import System.IO
 -- run the interpreter with the input and output hooked up to stdout and stdin should be simple :)
 main = do (path:args) <- getArgs
           contents <- readFile path
-          instr <- getContents
           case parseScript path contents of
             Left err -> putStrLn $ "Error in " ++ show err
-            Right script -> let (Finished _ _ _ outstr _) = complete (initialize script instr) in
-                            putStr outstr
+            Right script -> do complete (initialize script stdin stdout)
+                               return ()

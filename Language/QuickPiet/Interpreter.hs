@@ -1,63 +1,55 @@
-module Language.QuickPiet.Interpreter 
-    (Interpreter(..)
-    ,execute
-    ,nstep
-    ,initialize
-    ,complete
-    )where
+module Language.QuickPiet.Interpreter where
 
 import Data.List
 import Language.QuickPiet.StackOperations
+import System.IO
 
-data Interpreter = Interpreter [Command] [Command] String String Stack
-                 | Finished [Command] [Command] String String Stack
+data Interpreter = Interpreter [Command] [Command] Handle Handle Stack
+                 | Finished [Command] [Command] Stack
 
 instance Show Interpreter where
     show interpreter = intercalate "\n" [(status interpreter), (lineinfo interpreter), (stackstatus interpreter)]
         where status (Interpreter _ _ _ _ _) = "Executing..."
-              status (Finished    _ _ _ _ _) = "Finished..."
+              status (Finished    _ _ _) = "Finished..."
               lineinfo (Interpreter done rest _ _ _) = lineinfo' done rest
-              lineinfo (Finished done rest _ _ _) = lineinfo' done rest
+              lineinfo (Finished done rest _) = lineinfo' done rest
               lineinfo' ds [] = "<end of script>"
               lineinfo' ds (c:_) = (show (length ds)) ++ ": " ++ (show c)
               stackstatus (Interpreter _ _ _ _ stack) = show stack
-              stackstatus (Finished    _ _ _ _ stack) = show stack
+              stackstatus (Finished    _ _ stack) = show stack
 
-execute :: Interpreter -> Interpreter
-execute finished@(Finished _ _ _ _ _) = finished
-execute (Interpreter done []                          instr outstr stack)     = Finished done [] instr outstr stack
-execute (Interpreter done (p@(Push x):rest)           instr outstr stack)     = Interpreter (done ++ [p]) rest  instr  outstr  (push x stack)
-execute (Interpreter done (p@Pop:rest)                instr outstr stack)     = Interpreter (done ++ [p]) rest  instr  outstr  (pop stack)
-execute (Interpreter done (p@Duplicate:rest)          instr outstr stack)     = Interpreter (done ++ [p]) rest  instr  outstr  (duplicate stack)
-execute (Interpreter done (p@Roll:rest)               instr outstr stack)     = Interpreter (done ++ [p]) rest  instr  outstr  (roll stack)
-execute (Interpreter done (p@In:rest)                 instr outstr stack)     = Interpreter (done ++ [p]) rest  instr' outstr  stack'
-    where (instr', stack') = inop instr stack
-execute (Interpreter done (p@Out:rest)                instr outstr stack)     = Interpreter (done ++ [p]) rest  instr  outstr' stack'
-    where (outstr', stack') = outop outstr stack
-execute (Interpreter done (p@Add:rest)                instr outstr stack)     = Interpreter (done ++ [p]) rest  instr  outstr  (add stack)
-execute (Interpreter done (p@Subtract:rest)           instr outstr stack)     = Interpreter (done ++ [p]) rest  instr  outstr  (subtractop stack)
-execute (Interpreter done (p@Multiply:rest)           instr outstr stack)     = Interpreter (done ++ [p]) rest  instr  outstr  (multiply stack)
-execute (Interpreter done (p@Divide:rest)             instr outstr stack)     = Interpreter (done ++ [p]) rest  instr  outstr  (divide stack)
-execute (Interpreter done (p@Mod:rest)                instr outstr stack)     = Interpreter (done ++ [p]) rest  instr  outstr  (modop stack)
-execute (Interpreter done (p@Not:rest)                instr outstr stack)     = Interpreter (done ++ [p]) rest  instr  outstr  (notop stack)
-execute (Interpreter done (p@Greater:rest)            instr outstr stack)     = Interpreter (done ++ [p]) rest  instr  outstr  (greater stack)
-execute (Interpreter done (p@End:rest)                instr outstr stack)     = Finished    (done ++ [p]) rest  instr  outstr  stack
-execute (Interpreter done (p@(Label _):rest)          instr outstr stack)     = Interpreter (done ++ [p]) rest  instr  outstr  stack
-execute (Interpreter done (p@(Comment _):rest)        instr outstr stack)     = Interpreter (done ++ [p]) rest  instr  outstr  stack
-execute (Interpreter done (p@Blank:rest)              instr outstr stack)     = execute (Interpreter (done ++ [p]) rest instr outstr stack)
-execute (Interpreter done (p@(Goto label other):rest) instr outstr (x:stack)) = Interpreter done'         rest' instr  outstr  stack
+execute :: Interpreter -> IO Interpreter
+execute finished@(Finished _ _ _) = return finished
+execute (Interpreter done []                          inH outH stack)     = return $ Finished done [] stack
+execute (Interpreter done (p@(Push x):rest)           inH outH stack)     = return $ Interpreter (done ++ [p]) rest  inH  outH  (push x stack)
+execute (Interpreter done (p@Pop:rest)                inH outH stack)     = return $ Interpreter (done ++ [p]) rest  inH  outH  (pop stack)
+execute (Interpreter done (p@Duplicate:rest)          inH outH stack)     = return $ Interpreter (done ++ [p]) rest  inH  outH  (duplicate stack)
+execute (Interpreter done (p@Roll:rest)               inH outH stack)     = return $ Interpreter (done ++ [p]) rest  inH  outH  (roll stack)
+execute (Interpreter done (p@In:rest)                 inH outH stack)     = do stack' <- inop inH stack
+                                                                               return $ Interpreter (done ++ [p]) rest inH outH stack'
+execute (Interpreter done (p@Out:rest)                inH outH stack)     = do stack' <- outop outH stack
+                                                                               return $ Interpreter (done ++ [p]) rest inH outH stack'
+execute (Interpreter done (p@Add:rest)                inH outH stack)     = return $ Interpreter (done ++ [p]) rest  inH  outH  (add stack)
+execute (Interpreter done (p@Subtract:rest)           inH outH stack)     = return $ Interpreter (done ++ [p]) rest  inH  outH  (subtractop stack)
+execute (Interpreter done (p@Multiply:rest)           inH outH stack)     = return $ Interpreter (done ++ [p]) rest  inH  outH  (multiply stack)
+execute (Interpreter done (p@Divide:rest)             inH outH stack)     = return $ Interpreter (done ++ [p]) rest  inH  outH  (divide stack)
+execute (Interpreter done (p@Mod:rest)                inH outH stack)     = return $ Interpreter (done ++ [p]) rest  inH  outH  (modop stack)
+execute (Interpreter done (p@Not:rest)                inH outH stack)     = return $ Interpreter (done ++ [p]) rest  inH  outH  (notop stack)
+execute (Interpreter done (p@Greater:rest)            inH outH stack)     = return $ Interpreter (done ++ [p]) rest  inH  outH  (greater stack)
+execute (Interpreter done (p@End:rest)                inH outH stack)     = return $ Finished    (done ++ [p]) rest  stack
+execute (Interpreter done (p@(Label _):rest)          inH outH stack)     = return $ Interpreter (done ++ [p]) rest  inH  outH  stack
+execute (Interpreter done (p@(Comment _):rest)        inH outH stack)     = return $ Interpreter (done ++ [p]) rest  inH  outH  stack
+execute (Interpreter done (p@Blank:rest)              inH outH stack)     = execute (Interpreter (done ++ [p]) rest inH outH stack)
+execute (Interpreter done (p@(Goto label other):rest) inH outH (x:stack)) = return $ Interpreter done'         rest' inH  outH  stack
     where (done', rest') = goto x (done ++ [p] ++ rest)
           goto 1 prog = break (== (Label label)) prog
           goto 3 prog = break (== (Label other)) prog
 
-nstep :: Int -> Interpreter -> Interpreter
-nstep 0 interpreter = interpreter
-nstep n interpreter = nstep (n - 1) (execute interpreter)
-
-initialize :: [Command] -> String -> Interpreter
-initialize script instr = Interpreter [] script instr "" []
+initialize :: [Command] -> Handle -> Handle -> Interpreter
+initialize script inH outH = Interpreter [] script inH outH []
 
 -- takes the list of commands to execute and stdin, returns stdout
-complete :: Interpreter -> Interpreter
-complete finished@(Finished _ _ _ _ _) = finished
-complete interpreter = complete (execute interpreter)
+complete :: Interpreter -> IO Interpreter
+complete finished@(Finished _ _ _) = return $ finished
+complete interpreter = do interpreter' <- (execute interpreter)
+                          complete interpreter'

@@ -23,6 +23,7 @@ module Language.QuickPiet.StackOperations
 import Control.Exception
 import Data.Char
 import Data.Typeable
+import System.IO
 
 type Stack = [Int]
 
@@ -105,16 +106,15 @@ roll (x:y:stack) = roll' x top ++ bot
 
 -- in
 -- Read a single value from STDIN and push it onto the stack; characters are read as their ASCII value
-inop :: String -> Stack -> (String, Stack)
-inop bs stack = (cs, c:stack)
-    where c = ord (head bs)
-          cs = tail bs
+inop :: Handle -> Stack -> IO Stack
+inop inH stack = do c <- hGetChar inH
+                    return $ ord c : stack
 
 -- out
 -- Pop the top value from the stack and append it's ASCII character value to STDOUT
-outop :: String -> Stack -> (String, Stack)
-outop bs (x:stack) = ((bs ++ [b]), stack)
-    where b = chr x
+outop :: Handle -> Stack -> IO Stack
+outop outH (c:stack) = do hPutChar outH (chr c)
+                          return stack
 outop _ [] = throw (StackException "Cannot pop to output from an empty stack")
 
 -- add
