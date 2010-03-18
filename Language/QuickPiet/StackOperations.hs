@@ -21,6 +21,7 @@ module Language.QuickPiet.StackOperations
     )where
 
 import Control.Exception
+import Control.Monad.State
 import Data.Char
 import Data.Typeable
 
@@ -81,15 +82,27 @@ instance Show Command where
 push :: Int -> Stack -> Stack
 push elt stack= elt:stack
 
+push2 :: Int -> State Stack ()
+push2 elt = do stack <- get
+               put (elt:stack)
+
 -- pop
 -- Pops the top value of the stack and discards
 pop :: Stack -> Stack
 pop (elt:stack) = stack
 
+pop2 :: State Stack ()
+pop2 = do (elt:stack) <- get
+          put stack
+
 -- duplicate
 -- Pushes a copy of the top value of the stack onto the stack
 duplicate :: Stack -> Stack
 duplicate (x:stack) = x:x:stack
+
+duplicate2 :: State Stack ()
+duplicate2 = do (x:stack) <- get
+                put (x:x:stack)
 
 -- roll
 -- Pops the top two values, and "rolls" the remaining stack entries to a depth equal to the second value popped ...
@@ -103,12 +116,23 @@ roll (x:y:stack) = roll' x top ++ bot
           roll' 0 lst = lst
           roll' n (elt:lst) = roll' (n - 1) (lst ++ [elt])
 
+roll2 :: State Stack ()
+roll2 = do (x:y:stack) <- get
+           let (top, bot) = splitAt y stack
+           put (roll' x top ++ bot)
+    where roll' 0 lst = lst
+          roll' n (elt:lst) = roll' (n - 1) (lst ++ [elt])
+
 -- in
 -- Read a single value from STDIN and push it onto the stack; characters are read as their ASCII value
 inop :: String -> Stack -> (String, Stack)
 inop bs stack = (cs, c:stack)
     where c = ord (head bs)
           cs = tail bs
+
+inop2 :: Char -> State Stack ()
+inop2 c = do stack <- get
+             put $ ord c : stack
 
 -- out
 -- Pop the top value from the stack and append it's ASCII character value to STDOUT
@@ -117,30 +141,54 @@ outop bs (x:stack) = ((bs ++ [b]), stack)
     where b = chr x
 outop _ [] = throw (StackException "Cannot pop to output from an empty stack")
 
+outop2 :: State Stack Char
+outop2 = do (c:stack) <- get
+            put stack
+            return (chr c)
+
+binaryStackOp :: (Int -> Int -> Int) -> State Stack ()
+binaryStackOp f = do (x:y:stack) <- get
+                     put $ (f x y) : stack
+
 -- add
 -- Pops the top two values, adds them, and pushes the result
 add :: Stack -> Stack
 add (x:y:stack) = (x + y):stack
+
+add2 :: State Stack ()
+add2 = binaryStackOp (+)
 
 -- subtract
 -- Pops the top two values, subtracts the top value from the second top value, and pushes the result
 subtractop :: Stack -> Stack
 subtractop (x:y:stack) = (y - x):stack
 
+subtractop2 :: State Stack ()
+subtractop2 = binaryStackOp (-)
+
 -- multiply
 -- Pops the top two values, multiplies them, and pushes the result
 multiply :: Stack -> Stack
 multiply (x:y:stack) = (x * y):stack
+
+multiply2 :: State Stack ()
+multiply2 = binaryStackOp (*)
 
 -- divide
 -- Pops the top two values, integer divides the second top value by the top value, and pushes the result
 divide :: Stack -> Stack
 divide (x:y:stack) = (y `div` x):stack
 
+divide2 :: State Stack ()
+divide2 = binaryStackOp div
+
 -- mod
 -- Pops the top two values, calculates the second top value modulo the top value, and pushes the result
 modop :: Stack -> Stack
 modop (x:y:stack) = (y `mod` x):stack
+
+modop2 :: State Stack ()
+modop2 = binaryStackOp mod
 
 -- not
 -- Replaces the top value of the stack with 0 if it is non-zero, and 1 if it is zero
@@ -148,9 +196,21 @@ notop :: Stack -> Stack
 notop (0:stack) = 1:stack
 notop (_:stack) = 0:stack
 
+notop2 :: State Stack ()
+notop2 = do stack <- get
+            case stack of
+              (0:s) -> put $ 1:s
+              (_:s) -> put $ 0:s
+
 -- greater
 -- Pops the top two values, pushes 1 on to the stack if the second top value is greater than the top value, 0 otherwise
 greater :: Stack -> Stack
 greater (x:y:stack)
     | y > x = 1:stack
     | otherwise = 0:stack
+
+greater2 :: State Stack ()
+greater2 = do (x:y:stack) <- get
+              case y > x of
+                True -> put $ 1:stack
+                False -> put $ 0:stack
