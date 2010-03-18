@@ -112,3 +112,13 @@ greater = do (x:y:stack) <- get
              case y > x of
                True -> put $ 1:stack
                False -> put $ 0:stack
+
+end :: State Bool ()
+end = put False
+
+label :: String -> State ([Command a], [Command a]) String
+label s = return s
+
+goto :: Int -> State ([Command a], [Command a]) ()
+goto x = do (a, b) <- get
+            put $ splitAt x (a ++ b)
