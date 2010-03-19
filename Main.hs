@@ -10,12 +10,27 @@ import Language.QuickPiet.StackOperations
 import System
 import System.IO
 
--- the main will take a filename, open it, parse it and pass the parsed commands to the interpreter
--- run the interpreter with the input and output hooked up to stdout and stdin should be simple :)
-main = do putStr "> "
-          hFlush stdout
-          input <- getLine
-          case parseAction input of
-            Left error -> putStrLn $ "Error: " ++ (show error)
-            Right command -> let stack = execState command [] in
-                             do putStrLn $ showStack stack
+prompt :: IO String
+prompt = do
+  putStr "> "
+  hFlush stdout
+  getLine
+
+exec :: String -> Stack -> IO Stack
+exec input s =
+    case parseAction input of
+      Left error -> do 
+        putStrLn $ "Error: " ++ (show error)
+        return s
+      Right command -> let stack = execState command s in
+                       do putStrLn $ showStack stack
+                          hFlush stdout
+                          return stack
+
+interpLoop stack = do
+  input <- prompt
+  stack' <- exec input stack
+  interpLoop stack'
+
+main :: IO ()
+main = interpLoop []
