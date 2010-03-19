@@ -1,8 +1,6 @@
-module Language.QuickPiet.Parser 
-    (parseScript
-    ) where
+module Language.QuickPiet.Parser where
 
-import Language.QuickPiet.StackOperations (Command(..))
+import qualified Language.QuickPiet.StackOperations as Op
 import Text.ParserCombinators.Parsec hiding (label)
 import qualified Text.ParserCombinators.Parsec.Token as T
 
@@ -26,58 +24,27 @@ identifier = T.identifier lexer
 symbol = T.symbol lexer
 natural = T.natural lexer
 
--- a script is a bunch of lines terminated by an EOF
-script :: GenParser Char st [Command]
-script = do whiteSpace
-            result <- many command
-            eof
-            return result
-
--- a eol is a single \n char
-eol :: GenParser Char st Char
-eol = char '\n'
-
--- a command is a comment a label or an action
-command :: GenParser Char st Command
-command = label <|> action
-
--- a label is a : followed by an identifier
-label :: GenParser Char st Command
-label = do char ':'
-           name <- identifier
-           return (Label name)
-
-action :: GenParser Char st Command
+action :: GenParser Char st (Op.Command ())
 action = push 
-         <|> instruction "pop" Pop
-         <|> instruction "duplicate" Duplicate
-         <|> instruction "roll" Roll
-         <|> instruction "in" In
-         <|> instruction "out" Out
-         <|> instruction "add" Add
-         <|> instruction "subtract" Subtract
-         <|> instruction "multiply" Multiply
-         <|> instruction "divide" Divide
-         <|> instruction "mod" Mod
-         <|> instruction "not" Not
-         <|> instruction "greater" Greater
-         <|> instruction "end" End
-         <|> goto
+         <|> instruction "pop" Op.pop
+         <|> instruction "duplicate" Op.duplicate
+         <|> instruction "roll" Op.roll
+         <|> instruction "add" Op.add
+         <|> instruction "subtract" Op.subtractop
+         <|> instruction "multiply" Op.multiply
+         <|> instruction "divide" Op.divide
+         <|> instruction "mod" Op.modop
+         <|> instruction "not" Op.notop
+         <|> instruction "greater" Op.greater
 
-push :: GenParser Char st Command
+push :: GenParser Char st (Op.Command ())
 push = try $ do symbol "push"
                 x <- natural
-                return (Push (fromIntegral x))
+                return $ Op.push (fromIntegral x)
 
-instruction :: String -> Command -> GenParser Char st Command
+instruction :: String -> (Op.Command ()) -> GenParser Char st (Op.Command ())
 instruction s c = try $ do symbol s
                            return c
 
-goto = try $ do symbol "goto"
-                label <- identifier
-                other <- identifier
-                return (Goto label other)
-
-parseScript :: SourceName -> String -> Either ParseError [Command]
-parseScript = parse script
-
+parseAction :: String -> Either ParseError (Op.Command ())
+parseAction = parse action ""

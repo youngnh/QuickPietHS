@@ -8,6 +8,7 @@ import Control.Exception
 import Control.Monad.State
 import Data.Char
 import Data.Typeable
+import System.IO
 
 type Stack = [Int]
 
@@ -61,12 +62,20 @@ inop :: Char -> Command ()
 inop c = do stack <- get
             put $ ord c : stack
 
+inIO :: IO (Command ())
+inIO = do c <- getChar
+          return $ inop c
+          
 -- out
 -- Pop the top value from the stack and append it's ASCII character value to STDOUT
 outop :: Command Char
 outop = do (c:stack) <- get
            put stack
            return (chr c)
+
+outIO :: Command (IO ())
+outIO = do c <- outop
+           return (putChar c >> (hFlush stdout))
 
 binaryStackOp :: (Int -> Int -> Int) -> Command ()
 binaryStackOp f = do (x:y:stack) <- get
@@ -123,7 +132,10 @@ goto :: Int -> State ([Command a], [Command a]) ()
 goto x = do (a, b) <- get
             put $ splitAt x (a ++ b)
 
-next :: State([Command a], [Command a]) (Command a)
-next = do (a, (b:rest)) <- get
-          put (a ++ [b], rest)
-          return b
+next :: State([Command a], [Command a]) (Maybe (Command a))
+next = do state <- get
+          case state of
+            (a, (b:rest)) -> do put (a ++ [b], rest)
+                                return $ Just b
+            (a, []) -> do put (a, [])
+                          return Nothing
